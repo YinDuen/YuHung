@@ -32,6 +32,24 @@ body {
   color: var(--text);
   background: var(--bg);
   -webkit-font-smoothing: antialiased;
+  position: relative;
+}
+
+/* 若隱若現的斜向真實鋼琴琴鍵背景（可改用本地圖：url('piano-keys.jpg')）*/
+.bg-piano-keys {
+  position: fixed;
+  inset: -60%;
+  z-index: -1;
+  overflow: hidden;
+  background: var(--bg);
+  background-image:
+    linear-gradient(rgba(13, 12, 11, 0.88), rgba(13, 12, 11, 0.88)),
+    url("https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?auto=format&fit=crop&w=1920");
+  background-size: cover;
+  background-position: center;
+  transform: skewY(-10deg) rotate(-7deg);
+  transform-origin: center center;
+  pointer-events: none;
 }
 
 a {

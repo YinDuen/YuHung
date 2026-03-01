@@ -18,6 +18,7 @@
 ## 自訂
 
 - **個人照片**：將您的個人照命名為 `photo.jpg` 放在專案根目錄（與 `index.html` 同層），首頁開頭會自動顯示。
+- **背景鋼琴圖**：目前使用線上鋼琴琴鍵圖。若要改為自己的鋼琴照片，請將圖片命名為 `piano-keys.jpg` 放在專案根目錄，並在 `styles.css` 的 `.bg-piano-keys` 中把 `url("...")` 改為 `url("piano-keys.jpg")`。
 - 在 `index.html` 中將「關於」區塊的 `.about-image-placeholder` 換成真實照片的 `<img>`。
 - 在「影音」區塊的 `.media-card` 內加入實際的 YouTube / 音訊嵌入或連結。
 - 在「聯絡」區塊更新 `contact@yuungliao.com` 與社群連結為真實網址。
