@@ -293,27 +293,73 @@ img {
   background: var(--bg-soft);
 }
 
-.repertoire-list {
+.concert-list {
   display: grid;
-  gap: 2rem;
+  gap: 2.5rem;
 }
 
-.repertoire-item {
+.concert-card {
   padding: 2rem;
   border: 1px solid var(--border);
   background: rgba(255, 255, 255, 0.02);
 }
 
-.repertoire-item h3 {
-  font-size: 1.25rem;
-  margin: 0 0 0.5rem;
+.concert-title {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  margin: 0 0 0.35rem;
   color: var(--accent);
 }
 
-.repertoire-item p {
-  margin: 0;
-  color: var(--text-muted);
+.concert-title-en {
+  display: block;
   font-size: 0.95rem;
+  font-weight: 400;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+
+.concert-meta {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin: 0 0 1.25rem;
+}
+
+.concert-program {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+}
+
+.concert-program li {
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+.concert-program li:last-child {
+  border-bottom: none;
+}
+
+.concert-program li span {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-top: 0.15rem;
+  padding-left: 0.5rem;
+}
+
+.concert-program li em {
+  font-style: normal;
+  color: var(--accent);
+  font-size: 0.85rem;
+}
+
+.concert-org {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
 }
 
 /* --- Media --- */
@@ -457,7 +503,7 @@ img {
     padding: 3.5rem 0;
   }
 
-  .repertoire-item {
+  .concert-card {
     padding: 1.5rem;
   }
 }
