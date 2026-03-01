@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Yu-Hung Liao | 鋼琴家 Pianist</title>
+  <meta name="description" content="Yu-Hung Liao 鋼琴家個人網站 — 古典鋼琴演奏與音樂藝術">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Outfit:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="header">
+    <nav class="nav">
+      <a href="#home" class="logo">Yu-Hung Liao</a>
+      <ul class="nav-links">
+        <li><a href="#about">關於</a></li>
+        <li><a href="#repertoire">曲目</a></li>
+        <li><a href="#media">影音</a></li>
+        <li><a href="#contact">聯絡</a></li>
+      </ul>
+      <button class="nav-toggle" aria-label="開啟選單">
+        <span></span><span></span><span></span>
+      </button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="home" class="hero">
+      <div class="hero-bg"></div>
+      <div class="hero-photo">
+        <img src="pianist-portrait.jpg" alt="廖宥閎">
+      </div>
+      <div class="hero-content">
+        <p class="hero-subtitle">Pianist</p>
+        <h1 class="hero-title">Yu-Hung<br>Liao</h1>
+        <p class="hero-tagline">廖宥閎 — 古典鋼琴演奏</p>
+        <a href="#about" class="hero-cta">探索</a>
+      </div>
+      <div class="scroll-hint">
+        <span></span>
+      </div>
+    </section>
+
+    <section id="about" class="section about">
+      <div class="container">
+        <h2 class="section-title">關於</h2>
+        <div class="about-grid">
+          <div class="about-image">
+            <div class="about-image-placeholder">
+              <span aria-hidden="true"><img src="photo.jpg" alt="廖宥閎"></span>
+            </div>
+          </div>
+          <div class="about-text">
+            <p class="lead">
+              Yu-Hung Liao 致力於古典鋼琴演奏，以細膩的音色與深刻的音樂詮釋聞名。
+            </p>
+            <p>
+              在國內外音樂廳與音樂節中演出，曲目橫跨巴洛克至當代作品。除了獨奏之外，也活躍於室內樂與協奏曲演出，並從事教學與推廣工作。
+            </p>
+            <p>
+              透過每一次演奏，希望將作曲家筆下的情感與結構，化為與聽眾之間的對話。
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="repertoire" class="section repertoire">
+      <div class="container">
+        <h2 class="section-title">曲目與演出</h2>
+        <div class="repertoire-list">
+          <div class="repertoire-item">
+            <h3>獨奏會曲目</h3>
+            <p>巴赫、貝多芬、舒伯特、蕭邦、德布西、拉威爾等作曲家之重要鋼琴作品。</p>
+          </div>
+          <div class="repertoire-item">
+            <h3>協奏曲</h3>
+            <p>莫札特、貝多芬、柴可夫斯基、拉赫曼尼諾夫等鋼琴協奏曲。</p>
+          </div>
+          <div class="repertoire-item">
+            <h3>室內樂</h3>
+            <p>鋼琴三重奏、奏鳴曲（小提琴、大提琴）及藝術歌曲伴奏。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="media" class="section media">
+      <div class="container">
+        <h2 class="section-title">影音</h2>
+        <div class="media-grid">
+          <article class="media-card">
+            <div class="media-thumb">
+              <span aria-hidden="true">▶</span>
+            </div>
+            <h3>演奏精選</h3>
+            <p>近期獨奏會與音樂會精華</p>
+          </article>
+          <article class="media-card">
+            <div class="media-thumb">
+              <span aria-hidden="true">▶</span>
+            </div>
+            <h3>錄音作品</h3>
+            <p>錄音室與現場錄音</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="contact" class="section contact">
+      <div class="container">
+        <h2 class="section-title">聯絡</h2>
+        <div class="contact-content">
+          <p>演出邀約、合作與教學諮詢，歡迎來信。</p>
+          <a href="mailto:contact@yuungliao.com" class="contact-email">contact@yuungliao.com</a>
+          <div class="contact-social">
+            <a href="#" aria-label="YouTube">YouTube</a>
+            <a href="#" aria-label="Facebook">Facebook</a>
+            <a href="#" aria-label="Instagram">Instagram</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p>© <span id="year"></span> Yu-Hung Liao. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
