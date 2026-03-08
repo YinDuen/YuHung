@@ -1,12 +1,13 @@
 (function () {
   'use strict';
 
-  if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY || window.SUPABASE_URL.indexOf('YOUR_') === 0) {
-    document.getElementById('loginWrap').innerHTML = '<p class="error">請先在 config.js 設定 SUPABASE_URL 與 SUPABASE_ANON_KEY。</p>';
+  // 使用依官方文件初始化的單一 client（見 supabase-client.js）
+  var supabase = window.supabaseClient;
+  if (!supabase) {
+    var el = document.getElementById('loginWrap');
+    if (el) el.innerHTML = '<p class="error">請先在 config.js 設定 SUPABASE_URL 與 SUPABASE_ANON_KEY。</p>';
     return;
   }
-
-  var supabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
 
   var loginWrap = document.getElementById('loginWrap');
   var headerLoggedOut = document.getElementById('headerLoggedOut');

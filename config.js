@@ -1,8 +1,9 @@
-// Supabase 設定（請替換為你的專案網址與 anon key）
-// 從 Supabase Dashboard > Project Settings > API 取得
+// Supabase 設定（依官方文件 https://supabase.com/docs/reference/javascript/initializing）
+// 從 Supabase Dashboard > Project Settings > API 取得 URL 與 anon key
+// supabase-client.js 會用此處設定建立單一 createClient() 實例供全站使用
 //
 // 部署到自己的 VM/網域且登入出現 CORS 時：改用「反向代理」即可避開。
-// 1. 在 VM 使用 deploy/nginx-yuhung-with-supabase-proxy.conf（並改裡面的 YOUR_SUPABASE_PROJECT_REF）
+// 1. 在 VM 使用 deploy/nginx-yuhung-with-supabase-proxy.conf（並改裡面的專案 ref）
 // 2. 下面改為使用代理網址（anon key 不變）：
 //    window.SUPABASE_URL = window.location.origin + '/supabase-proxy';
 //

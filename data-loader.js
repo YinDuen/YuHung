@@ -1,11 +1,11 @@
 (function () {
   'use strict';
 
-  if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY || window.SUPABASE_URL.indexOf('YOUR_') === 0) {
+  // 使用依官方文件初始化的單一 client（見 supabase-client.js）
+  var supabase = window.supabaseClient;
+  if (!supabase) {
     return; // 未設定 Supabase 時保留靜態內容
   }
-
-  var supabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
 
   function renderAbout(data) {
     if (!data || data.length === 0) return;

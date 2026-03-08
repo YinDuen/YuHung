@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Supabase 連線測試</title>
+  <style>
+    body { font-family: sans-serif; max-width: 640px; margin: 2rem auto; padding: 0 1rem; }
+    pre { background: #f0f0f0; padding: 1rem; overflow: auto; font-size: 0.85rem; }
+    .ok { color: green; }
+    .err { color: #c00; }
+    button { padding: 0.5rem 1rem; margin-top: 0.5rem; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>Supabase anon key 驗證</h1>
+  <p>此頁會用 <code>config.js</code> 的設定對 Supabase 發請求，並顯示結果。</p>
+  <div id="out"><p>載入中…</p></div>
+  <button type="button" id="btn">重新測試</button>
+
+  <script src="config.js"></script>
+  <script>
+    (function () {
+      var out = document.getElementById('out');
+      function log(msg, isError) {
+        var p = document.createElement('p');
+        p.className = isError ? 'err' : 'ok';
+        p.textContent = msg;
+        out.appendChild(p);
+      }
+      function run() {
+        out.innerHTML = '';
+        log('測試開始…');
+        try {
+          if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY || window.SUPABASE_URL.indexOf('YOUR_') === 0) {
+            log('請先在 config.js 設定 SUPABASE_URL 與 SUPABASE_ANON_KEY', true);
+            log('目前 SUPABASE_URL: ' + (window.SUPABASE_URL || '(未設定)'), true);
+            return;
+          }
+          log('URL: ' + window.SUPABASE_URL);
+          log('正在請求 about 表…');
+          var url = window.SUPABASE_URL.replace(/\/$/, '') + '/rest/v1/about?select=lead&limit=1';
+          fetch(url, {
+            method: 'GET',
+            headers: {
+              'apikey': window.SUPABASE_ANON_KEY,
+              'Authorization': 'Bearer ' + window.SUPABASE_ANON_KEY,
+              'Accept': 'application/json'
+            }
+          }).then(function (res) {
+            log('HTTP 狀態: ' + res.status + ' ' + res.statusText, res.status >= 400);
+            return res.text().then(function (text) {
+              try {
+                var json = JSON.parse(text);
+                log('回應: ' + JSON.stringify(json, null, 2));
+                if (res.status === 200) {
+                  log('anon key 有效，可讀取資料。', false);
+                } else if (res.status === 401) {
+                  log('anon key 無效或已過期（401）。請到 Supabase Dashboard > Project Settings > API 複製正確的 anon public key。', true);
+                } else if (res.status === 404) {
+                  log('路徑或 about 表有誤。請在 SQL Editor 執行 supabase/migrations/001_initial_schema.sql。', true);
+                }
+              } catch (e) {
+                log('回應內容: ' + text.substring(0, 500), res.status >= 400);
+              }
+            });
+          }).catch(function (err) {
+            log('請求失敗: ' + err.message, true);
+            log('若為 CORS / Failed to fetch，請用 npx serve . 開此頁（勿用 file://），或改用 Nginx 代理。', true);
+          });
+        } catch (e) {
+          log('執行錯誤: ' + e.message, true);
+        }
+      }
+      document.getElementById('btn').onclick = run;
+      run();
+    })();
+  </script>
+</body>
+</html>

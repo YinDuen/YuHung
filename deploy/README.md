@@ -73,3 +73,64 @@ server {
 ```
 
 這樣外層只開 80，由 nginx 轉到本機 3000。但對目前這個靜態專案，直接讓 nginx 當 root 提供檔案較簡單也較省資源。
+
+---
+
+## 使用 Supabase 代理設定時出現 500
+
+若改用 **nginx-yuhung-with-supabase-proxy.conf** 後出現 **500 Internal Server Error**、連首頁都打不開：
+
+1. **先還原成「無代理」設定**，確認網站本身正常：
+   - 用回 `deploy/nginx-yuhung.conf`（沒有 `/supabase-proxy/` 的那份）
+   - `sudo nginx -t` 後 `sudo systemctl reload nginx`
+   - 確認用 `http://你的IP/` 能打開首頁
+
+2. **確認 root 路徑存在且正確**：
+   - 設定裡的 `root /var/www/yuhung` 必須是 VM 上**實際放網站檔案的目錄**
+   - 該目錄裡要有 `index.html`、`admin.html`、`config.js` 等
+   - 若你實際路徑是 `/var/www/html/YuHung`，請把設定裡的 root 改成 `root /var/www/html/YuHung;`
+
+3. **再換回代理版**：已移除容易導致 500 的 `if (OPTIONS)` 區塊，請重新複製最新的 **nginx-yuhung-with-supabase-proxy.conf** 到 sites-available，改好 root 與專案 ref 後再 `nginx -t` 與 `reload`。
+
+4. **若你是用「子路徑」開站**（例如網址是 `http://IP/YuHung/`）：
+   - 需要把網站檔案放在對應實體路徑（例如 root 的上一層，並用 `location /YuHung/ { alias /var/www/實際目錄/; }` 之類方式對應），或改為用網域／根路徑架站，避免 root 與網址路徑不一致。
+
+---
+
+## VM 連不到 Supabase 時（Nginx 代理要生效，VM 必須能連外）
+
+Nginx 反向代理的流程是：**瀏覽器 → 你的 VM (Nginx) → Supabase**。若 **VM 本身連不到 Supabase**（出站被擋或 DNS 有問題），代理也會失敗，無法靠「只改 Nginx 設定」解決，必須先讓 VM 能對外連到 Supabase。
+
+### 1. 在 VM 上確認能否連到 Supabase
+
+SSH 進 VM 後執行（請換成你的專案 ref 與 anon key）：
+
+```bash
+# 測試 DNS 與連線（應有回應或 200）
+curl -s -o /dev/null -w "%{http_code}" \
+  -H "apikey: 你的ANON_KEY" -H "Authorization: Bearer 你的ANON_KEY" \
+  "https://你的專案ref.supabase.co/rest/v1/about?select=lead&limit=1"
+```
+
+- 輸出 **200** 或 **401**：VM 能連 Supabase，問題在別處（例如瀏覽器 CORS）。
+- 逾時、連線被拒、無輸出：VM **出站**到 Supabase 被擋，要處理網路／防火牆。
+
+### 2. Google Cloud 上放行 VM 對外連線（HTTPS）
+
+在 **Google Cloud Console**：
+
+1. 左側選 **VPC 網路** → **防火牆**（或 **VPC network** → **Firewall**）。
+2. 預設通常已有 **egress（出站）** 允許：若你的 VM 使用 **default** 網路，多數情況預設允許所有出站。若仍連不到，可新增一條 **出站規則**：
+   - **方向**：Egress（出站）
+   - **目標**：網路上的所有執行個體，或指定該 VM 的網路標籤
+   - **允許**：tcp:443（HTTPS）
+   - **目的地**：`0.0.0.0/0`（或僅允許 Supabase：需查 Supabase 的 IP 或使用 FQDN，多數情況用 0.0.0.0/0 較簡單）
+3. 若 VM 透過 **Cloud NAT** 或 **無外部位址** 上網，請確認 NAT / 路由有允許對外 443。
+4. 若專案有 **組織政策** 或 **防火牆** 限制僅能連特定網域，需把 `*.supabase.co` 或 `你的專案ref.supabase.co` 加入允許清單。
+
+### 3. 其他可能原因
+
+- **公司／學校網路**：若 VM 在受管網路內，出站可能只允許白名單，需請管理員放行 `*.supabase.co` 或 HTTPS 443。
+- **DNS**：在 VM 上執行 `nslookup 你的專案ref.supabase.co`，若解析不到，可暫時在 `/etc/hosts` 手動設 IP，或改用可用的 DNS（例如 8.8.8.8）。
+
+VM 能連到 Supabase 後，再使用 **nginx-yuhung-with-supabase-proxy.conf** 與 `config.js` 的 `/supabase-proxy` 設定，代理才會正常。

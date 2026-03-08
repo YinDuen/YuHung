@@ -40,6 +40,15 @@
 - **Project Settings > API**：複製 `Project URL` 與 `anon public` key。
 - 將 `config.js` 內的 `SUPABASE_URL`、`SUPABASE_ANON_KEY` 替換成上述兩項。
 
+### 如何驗證 anon key 是否有效
+
+- **方式一（瀏覽器）**：用本機或 VM 上的網址開啟 **`test-supabase.html`**（例如 `http://localhost:3000/test-supabase.html` 或 `http://你的IP/test-supabase.html`）。頁面會對 Supabase 發一筆讀取請求並顯示結果：**HTTP 200** 表示 key 有效；**401** 表示 key 無效或過期；若出現 **Failed to fetch**，多半是 CORS 或網路問題，可改用 Nginx 代理或在本機用 `npx serve .` 開同來源再測。
+- **方式二（指令列）**：在終端機執行（替換 `你的ANON_KEY` 與 `你的專案ref`）。**Windows 請用 CMD 或 Git Bash，並打 `curl.exe`**（不要用 PowerShell 的 curl 別名，否則可能沒有輸出）：
+  ```bash
+  curl.exe -s -w "HTTP 狀態碼: %{http_code}\n" -o nul -H "apikey: 你的ANON_KEY" -H "Authorization: Bearer 你的ANON_KEY" "https://你的專案ref.supabase.co/rest/v1/about?select=lead&limit=1"
+  ```
+  Linux / Mac 把 `-o nul` 改成 `-o /dev/null`。輸出 **HTTP 狀態碼: 200** 表示 key 有效；**401** 表示無效。
+
 ### 若部署到自己的網域或 VM（登入出現 CORS / preflight 失敗）
 
 Supabase 託管版在 Dashboard **可能沒有**獨立的 CORS / Allowed Origins 設定，可依序嘗試以下兩種方式。
@@ -77,11 +86,12 @@ Supabase 託管版在 Dashboard **可能沒有**獨立的 CORS / Allowed Origins
 
 ```
 YuHung/
-├── index.html       # 主頁
-├── styles.css       # 樣式
-├── script.js        # 導覽與捲動效果
-├── config.js        # Supabase 設定（需自行填入）
-├── data-loader.js   # 從 Supabase 載入首頁內容
+├── index.html          # 主頁
+├── styles.css          # 樣式
+├── script.js           # 導覽與捲動效果
+├── config.js           # Supabase 設定（需自行填入）
+├── supabase-client.js  # 依官方文件建立單一 Supabase client
+├── data-loader.js      # 從 Supabase 載入首頁內容
 ├── admin.html       # 後台管理頁
 ├── admin.js         # 後台邏輯
 ├── admin.css        # 後台樣式
