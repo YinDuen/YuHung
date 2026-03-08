@@ -18,6 +18,21 @@ body {
   min-height: 100vh;
 }
 
+/* 登入後強制隱藏登入區，避免殘留遮擋或灰暗無法操作 */
+body.logged-in .login-wrap {
+  display: none !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+  position: absolute !important;
+  left: -9999px !important;
+  z-index: -1 !important;
+}
+body.logged-in .admin-nav,
+body.logged-in .admin-main {
+  position: relative;
+  z-index: 1;
+}
+
 .admin-header {
   padding: 1rem 1.5rem;
   border-bottom: 1px solid var(--border);

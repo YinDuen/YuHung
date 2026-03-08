@@ -54,19 +54,46 @@
     if (panelId === 'media') loadMedia();
   }
 
+  // 為請求加逾時，避免透過代理時無回應導致畫面卡住
+  function withTimeout(promise, ms) {
+    var timeout = new Promise(function (_, reject) {
+      setTimeout(function () { reject(new Error('請求逾時（' + ms / 1000 + ' 秒）')); }, ms);
+    });
+    return Promise.race([promise, timeout]);
+  }
+
   supabase.auth.onAuthStateChange(function (event, session) {
     if (session) {
+      document.body.classList.add('logged-in');
       headerLoggedOut.style.display = 'none';
       headerLoggedIn.style.display = 'flex';
       loginWrap.style.display = 'none';
       adminNav.style.display = 'flex';
       adminMain.style.display = 'block';
       userEmail.textContent = session.user.email;
-      loadAbout();
-      loadContact();
       var hash = (window.location.hash || '#about').slice(1);
       switchPanel(hash || 'about');
+      // 登入後非同步載入關於／聯絡，加逾時與 catch 避免 hang
+      withTimeout(supabase.from('about').select('*').limit(1).maybeSingle(), 15000).then(function (r) {
+        if (r.data) {
+          document.getElementById('aboutLead').value = r.data.lead || '';
+          document.getElementById('aboutParagraphs').value = Array.isArray(r.data.paragraphs) ? r.data.paragraphs.join('\n') : '';
+          document.getElementById('aboutImageUrl').value = r.data.image_url || '';
+        }
+      }).catch(function () {});
+      withTimeout(supabase.from('contact').select('*').limit(1).maybeSingle(), 15000).then(function (r) {
+        if (r.data) {
+          var row = r.data;
+          document.getElementById('contactIntro').value = row.intro || '';
+          document.getElementById('contactEmail').value = row.email || '';
+          var social = row.social_links || {};
+          document.getElementById('contactYoutube').value = social.youtube || '';
+          document.getElementById('contactFacebook').value = social.facebook || '';
+          document.getElementById('contactInstagram').value = social.instagram || '';
+        }
+      }).catch(function () {});
     } else {
+      document.body.classList.remove('logged-in');
       headerLoggedIn.style.display = 'none';
       headerLoggedOut.style.display = 'flex';
       loginWrap.style.display = 'block';
@@ -119,13 +146,13 @@
 
   // ---------- 關於 ----------
   function loadAbout() {
-    supabase.from('about').select('*').limit(1).maybeSingle().then(function (r) {
+    withTimeout(supabase.from('about').select('*').limit(1).maybeSingle(), 15000).then(function (r) {
       if (r.data) {
         document.getElementById('aboutLead').value = r.data.lead || '';
         document.getElementById('aboutParagraphs').value = Array.isArray(r.data.paragraphs) ? r.data.paragraphs.join('\n') : '';
         document.getElementById('aboutImageUrl').value = r.data.image_url || '';
       }
-    });
+    }).catch(function () {});
   }
 
   document.getElementById('aboutForm').addEventListener('submit', function (e) {
@@ -153,7 +180,8 @@
   function loadRepertoire() {
     var listEl = document.getElementById('repertoireList');
     listEl.innerHTML = '<span class="loading">載入中…</span>';
-    supabase.from('repertoire').select('*').order('sort_order', { ascending: false }).then(function (r) {
+    var req = supabase.from('repertoire').select('*').order('sort_order', { ascending: false });
+    withTimeout(req, 15000).then(function (r) {
       if (r.error) {
         listEl.innerHTML = '<span class="error">' + escapeHtml(r.error.message) + '</span>';
         return;
@@ -203,6 +231,8 @@
           document.getElementById('repertoireForm').scrollIntoView();
         });
       });
+    }).catch(function () {
+      listEl.innerHTML = '<p class="err">載入失敗或逾時，請稍後再試。</p>';
     });
   }
 
@@ -239,7 +269,8 @@
   function loadMedia() {
     var listEl = document.getElementById('mediaList');
     listEl.innerHTML = '<span class="loading">載入中…</span>';
-    supabase.from('media').select('*').order('sort_order', { ascending: true }).then(function (r) {
+    var req = supabase.from('media').select('*').order('sort_order', { ascending: true });
+    withTimeout(req, 15000).then(function (r) {
       if (r.error) {
         listEl.innerHTML = '<span class="error">' + escapeHtml(r.error.message) + '</span>';
         return;
@@ -284,6 +315,8 @@
           document.getElementById('mediaForm').scrollIntoView();
         });
       });
+    }).catch(function () {
+      listEl.innerHTML = '<p class="err">載入失敗或逾時，請稍後再試。</p>';
     });
   }
 
@@ -316,7 +349,7 @@
 
   // ---------- 聯絡 ----------
   function loadContact() {
-    supabase.from('contact').select('*').limit(1).maybeSingle().then(function (r) {
+    withTimeout(supabase.from('contact').select('*').limit(1).maybeSingle(), 15000).then(function (r) {
       if (r.data) {
         var row = r.data;
         document.getElementById('contactIntro').value = row.intro || '';
@@ -326,7 +359,7 @@
         document.getElementById('contactFacebook').value = social.facebook || '';
         document.getElementById('contactInstagram').value = social.instagram || '';
       }
-    });
+    }).catch(function () {});
   }
 
   document.getElementById('contactForm').addEventListener('submit', function (e) {
@@ -356,16 +389,33 @@
   // 初始：若已有 session 會由 onAuthStateChange 處理
   supabase.auth.getSession().then(function (r) {
     if (r.data.session) {
+      document.body.classList.add('logged-in');
       headerLoggedOut.style.display = 'none';
       headerLoggedIn.style.display = 'flex';
       loginWrap.style.display = 'none';
       adminNav.style.display = 'flex';
       adminMain.style.display = 'block';
       userEmail.textContent = r.data.session.user.email;
-      loadAbout();
-      loadContact();
       var hash = (window.location.hash || '#about').slice(1);
       switchPanel(hash || 'about');
+      withTimeout(supabase.from('about').select('*').limit(1).maybeSingle(), 15000).then(function (res) {
+        if (res.data) {
+          document.getElementById('aboutLead').value = res.data.lead || '';
+          document.getElementById('aboutParagraphs').value = Array.isArray(res.data.paragraphs) ? res.data.paragraphs.join('\n') : '';
+          document.getElementById('aboutImageUrl').value = res.data.image_url || '';
+        }
+      }).catch(function () {});
+      withTimeout(supabase.from('contact').select('*').limit(1).maybeSingle(), 15000).then(function (res) {
+        if (res.data) {
+          var row = res.data;
+          document.getElementById('contactIntro').value = row.intro || '';
+          document.getElementById('contactEmail').value = row.email || '';
+          var social = row.social_links || {};
+          document.getElementById('contactYoutube').value = social.youtube || '';
+          document.getElementById('contactFacebook').value = social.facebook || '';
+          document.getElementById('contactInstagram').value = social.instagram || '';
+        }
+      }).catch(function () {});
     }
   });
 })();
