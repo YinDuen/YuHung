@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>後台管理 | Yu-Hung Liao</title>
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <header class="admin-header" id="headerLoggedOut">
+    <h1>Yu-Hung 網站後台</h1>
+    <a href="index.html">← 回官網</a>
+  </header>
+
+  <header class="admin-header" id="headerLoggedIn" style="display:none;">
+    <h1>Yu-Hung 網站後台</h1>
+    <span class="user" id="userEmail"></span>
+    <div>
+      <a href="index.html">回官網</a>
+      <button type="button" id="btnLogout">登出</button>
+    </div>
+  </header>
+
+  <div id="loginWrap" class="login-wrap">
+    <h2>登入管理後台</h2>
+    <form id="loginForm">
+      <label for="loginEmail">Email</label>
+      <input type="email" id="loginEmail" required placeholder="your@email.com">
+      <label for="loginPassword">密碼</label>
+      <input type="password" id="loginPassword" required>
+      <div class="error" id="loginError"></div>
+      <button type="submit">登入</button>
+    </form>
+  </div>
+
+  <nav class="admin-nav" id="adminNav" style="display:none;">
+    <a href="#about" data-panel="about" class="active">關於</a>
+    <a href="#repertoire" data-panel="repertoire">曲目</a>
+    <a href="#media" data-panel="media">影音</a>
+    <a href="#contact" data-panel="contact">聯絡</a>
+  </nav>
+
+  <main class="admin-main" id="adminMain" style="display:none;">
+    <!-- 關於 -->
+    <section id="panel-about" class="panel active">
+      <h2>關於</h2>
+      <div id="aboutMsg"></div>
+      <form id="aboutForm">
+        <div class="form-group">
+          <label>引言（lead）</label>
+          <input type="text" id="aboutLead" placeholder="自然而純真，是對廖宥閎的音樂最貼切的形容詞。">
+        </div>
+        <div class="form-group">
+          <label>段落（一行一段）</label>
+          <textarea id="aboutParagraphs" rows="8" placeholder="每行一段落&#10;第二段&#10;第三段"></textarea>
+        </div>
+        <div class="form-group">
+          <label>關於區圖片網址</label>
+          <input type="text" id="aboutImageUrl" placeholder="photo.jpg 或完整 URL">
+        </div>
+        <button type="submit" class="btn btn-primary">儲存關於</button>
+      </form>
+    </section>
+
+    <!-- 曲目 -->
+    <section id="panel-repertoire" class="panel">
+      <h2>曲目與演出</h2>
+      <div id="repertoireMsg"></div>
+      <form id="repertoireForm" style="margin-bottom:2rem;">
+        <div class="form-group">
+          <label>標題</label>
+          <input type="text" id="repTitle" required placeholder="一鍵鍾琴 個人鋼琴獨奏會">
+        </div>
+        <div class="form-group">
+          <label>時間・地點（meta）</label>
+          <input type="text" id="repMeta" placeholder="2023.2.26 14:30 · 文水藝文中心 · 地址">
+        </div>
+        <div class="form-group">
+          <label>曲目列表（每行一則：中文 | 英文 | 備註（可略））</label>
+          <textarea id="repProgram" rows="10" placeholder="巴赫：G大調第五號法國組曲 作品816 | J.S. Bach: French Suite No.5&#10;海頓：C大調鋼琴奏鳴曲 | J. Haydn: Piano Sonata in C Major"></textarea>
+          <span class="hint">格式：中文 | 英文 | 備註（備註可省略）</span>
+        </div>
+        <div class="form-group">
+          <label>主辦單位／備註</label>
+          <input type="text" id="repOrg" placeholder="主辦單位／含光藝術工作室">
+        </div>
+        <div class="form-group">
+          <label>排序（數字愈大愈前面）</label>
+          <input type="number" id="repSortOrder" value="0">
+        </div>
+        <button type="submit" class="btn btn-primary">新增曲目</button>
+      </form>
+      <div class="item-list" id="repertoireList"></div>
+    </section>
+
+    <!-- 影音 -->
+    <section id="panel-media" class="panel">
+      <h2>影音</h2>
+      <div id="mediaMsg"></div>
+      <form id="mediaForm" style="margin-bottom:2rem;">
+        <div class="form-group">
+          <label>標題</label>
+          <input type="text" id="mediaTitle" required placeholder="演奏精選">
+        </div>
+        <div class="form-group">
+          <label>說明</label>
+          <input type="text" id="mediaDescription" placeholder="近期獨奏會與音樂會精華">
+        </div>
+        <div class="form-group">
+          <label>影片連結</label>
+          <input type="url" id="mediaVideoUrl" placeholder="https://youtube.com/...">
+        </div>
+        <div class="form-group">
+          <label>縮圖網址（可略）</label>
+          <input type="text" id="mediaThumbnailUrl" placeholder="https://...">
+        </div>
+        <div class="form-group">
+          <label>排序</label>
+          <input type="number" id="mediaSortOrder" value="0">
+        </div>
+        <button type="submit" class="btn btn-primary">新增影音</button>
+      </form>
+      <div class="item-list" id="mediaList"></div>
+    </section>
+
+    <!-- 聯絡 -->
+    <section id="panel-contact" class="panel">
+      <h2>聯絡</h2>
+      <div id="contactMsg"></div>
+      <form id="contactForm">
+        <div class="form-group">
+          <label>說明文字</label>
+          <input type="text" id="contactIntro" placeholder="演出邀約、合作與教學諮詢，歡迎來信。">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="contactEmail" required placeholder="contact@yuungliao.com">
+        </div>
+        <div class="form-group">
+          <label>YouTube 連結</label>
+          <input type="url" id="contactYoutube" placeholder="https://youtube.com/...">
+        </div>
+        <div class="form-group">
+          <label>Facebook 連結</label>
+          <input type="url" id="contactFacebook" placeholder="https://facebook.com/...">
+        </div>
+        <div class="form-group">
+          <label>Instagram 連結</label>
+          <input type="url" id="contactInstagram" placeholder="https://instagram.com/...">
+        </div>
+        <button type="submit" class="btn btn-primary">儲存聯絡</button>
+      </form>
+    </section>
+  </main>
+
+  <script src="config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="admin.js"></script>
+</body>
+</html>
