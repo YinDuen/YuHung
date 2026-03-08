@@ -327,6 +327,33 @@ img {
   box-sizing: border-box;
 }
 
+.concert-card-inner {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+}
+
+.concert-card-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.concert-poster {
+  flex-shrink: 0;
+  width: 260px;
+  border-radius: 2px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.concert-poster img {
+  width: 100%;
+  height: auto;
+  max-height: 360px;
+  object-fit: contain;
+  display: block;
+}
+
 .concert-title {
   font-family: var(--font-display);
   font-size: 1.35rem;
@@ -536,6 +563,16 @@ img {
   }
 
   .about-image-placeholder {
+    max-width: 320px;
+    margin: 0 auto;
+  }
+
+  .concert-card-inner {
+    flex-direction: column;
+  }
+
+  .concert-poster {
+    width: 100%;
     max-width: 320px;
     margin: 0 auto;
   }

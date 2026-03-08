@@ -7,6 +7,15 @@
     return; // 未設定 Supabase 時保留靜態內容
   }
 
+  /** 從影片連結取得縮圖 URL（支援 YouTube、youtu.be） */
+  function getVideoThumbnailUrl(videoUrl) {
+    if (!videoUrl || !videoUrl.trim()) return '';
+    var u = videoUrl.trim();
+    var ytMatch = u.match(/(?:youtube\.com\/watch\?v=|youtube\.com\/embed\/|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+    if (ytMatch) return 'https://img.youtube.com/vi/' + ytMatch[1] + '/hqdefault.jpg';
+    return '';
+  }
+
   function renderAbout(data) {
     if (!data || data.length === 0) return;
     var row = data[0];
@@ -38,12 +47,16 @@
         var note = item.note ? ' <em>' + escapeHtml(item.note) + '</em>' : '';
         return '<li>' + escapeHtml(zh) + ' <span>' + escapeHtml(en) + '</span>' + note + '</li>';
       }).join('');
-      return '<article class="concert-card">' +
-        '<h3 class="concert-title">' + escapeHtml(c.title) + '</h3>' +
+      var posterHtml = (c.poster_url && c.poster_url.trim()) ? '<div class="concert-poster"><img src="' + escapeHtml(c.poster_url) + '" alt=""></div>' : '';
+      var bodyHtml = '<h3 class="concert-title">' + escapeHtml(c.title) + '</h3>' +
         '<p class="concert-meta">' + escapeHtml(c.meta || '') + '</p>' +
         '<ul class="concert-program">' + programHtml + '</ul>' +
-        (c.org ? '<p class="concert-org">' + escapeHtml(c.org) + '</p>' : '') +
-        '</article>';
+        (c.org ? '<p class="concert-org">' + escapeHtml(c.org) + '</p>' : '');
+      return '<article class="concert-card">' +
+        '<div class="concert-card-inner">' +
+        '<div class="concert-card-body">' + bodyHtml + '</div>' +
+        (posterHtml ? posterHtml : '') +
+        '</div></article>';
     }).join('');
   }
 
@@ -52,8 +65,9 @@
     if (!container || !data || data.length === 0) return;
     data.sort(function (a, b) { return (a.sort_order || 0) - (b.sort_order || 0); });
     container.innerHTML = data.map(function (m) {
-      var thumb = m.thumbnail_url
-        ? '<img src="' + escapeHtml(m.thumbnail_url) + '" alt="">'
+      var thumbSrc = (m.thumbnail_url && m.thumbnail_url.trim()) ? m.thumbnail_url : getVideoThumbnailUrl(m.video_url);
+      var thumb = thumbSrc
+        ? '<img src="' + escapeHtml(thumbSrc) + '" alt="">'
         : '<span aria-hidden="true">▶</span>';
       var link = m.video_url ? ('<a href="' + escapeHtml(m.video_url) + '" target="_blank" rel="noopener">') : '';
       var linkEnd = m.video_url ? '</a>' : '';

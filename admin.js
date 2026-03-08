@@ -30,6 +30,15 @@
     return div.innerHTML;
   }
 
+  /** 從影片連結取得縮圖 URL（支援 YouTube、youtu.be） */
+  function getVideoThumbnailUrl(videoUrl) {
+    if (!videoUrl || !videoUrl.trim()) return '';
+    var u = videoUrl.trim();
+    var ytMatch = u.match(/(?:youtube\.com\/watch\?v=|youtube\.com\/embed\/|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+    if (ytMatch) return 'https://img.youtube.com/vi/' + ytMatch[1] + '/hqdefault.jpg';
+    return '';
+  }
+
   function formatLoginError(msg) {
     var isFileProtocol = window.location.protocol === 'file:';
     var isFetchError = !msg || (msg.toLowerCase().indexOf('fetch') !== -1) || (msg.toLowerCase().indexOf('network') !== -1);
@@ -226,6 +235,8 @@
             return [p.zh || '', p.en || '', p.note || ''].join(' | ').replace(/\s*\|\s*$/, '');
           }).join('\n');
           document.getElementById('repOrg').value = item.org || '';
+          document.getElementById('repPosterUrl').value = item.poster_url || '';
+          document.getElementById('repPosterFile').value = '';
           document.getElementById('repSortOrder').value = item.sort_order || 0;
           document.getElementById('repertoireForm').setAttribute('data-edit-id', id);
           document.getElementById('repertoireForm').scrollIntoView();
@@ -249,20 +260,40 @@
     }).filter(function (p) { return p.zh || p.en; }) : [];
     var org = document.getElementById('repOrg').value.trim();
     var sort_order = parseInt(document.getElementById('repSortOrder').value, 10) || 0;
-    var payload = { title: title, meta: meta, program: program, org: org, sort_order: sort_order, updated_at: new Date().toISOString() };
-    var promise = editId
-      ? supabase.from('repertoire').update(payload).eq('id', editId)
-      : supabase.from('repertoire').insert(payload);
-    promise.then(function (r) {
-      if (r.error) throw r.error;
-      showMsg('repertoire', editId ? '已更新' : '已新增');
-      form.removeAttribute('data-edit-id');
-      form.reset();
-      document.getElementById('repSortOrder').value = 0;
-      loadRepertoire();
-    }).catch(function (err) {
-      showMsg('repertoire', err.message || '操作失敗', true);
-    });
+    var posterUrlInput = document.getElementById('repPosterUrl');
+    var posterFileInput = document.getElementById('repPosterFile');
+
+    function saveRepertoire(poster_url) {
+      var payload = { title: title, meta: meta, program: program, org: org, sort_order: sort_order, poster_url: poster_url || '', updated_at: new Date().toISOString() };
+      var promise = editId
+        ? supabase.from('repertoire').update(payload).eq('id', editId)
+        : supabase.from('repertoire').insert(payload);
+      promise.then(function (r) {
+        if (r.error) throw r.error;
+        showMsg('repertoire', editId ? '已更新' : '已新增');
+        form.removeAttribute('data-edit-id');
+        form.reset();
+        document.getElementById('repSortOrder').value = 0;
+        posterFileInput.value = '';
+        loadRepertoire();
+      }).catch(function (err) {
+        showMsg('repertoire', err.message || '操作失敗', true);
+      });
+    }
+
+    if (posterFileInput.files && posterFileInput.files.length > 0) {
+      var file = posterFileInput.files[0];
+      var path = Date.now() + '-' + (file.name || 'poster').replace(/[^a-zA-Z0-9._-]/g, '_');
+      supabase.storage.from('repertoire-posters').upload(path, file, { upsert: true }).then(function (r) {
+        if (r.error) throw r.error;
+        var publicUrl = supabase.storage.from('repertoire-posters').getPublicUrl(r.data.path).data.publicUrl;
+        saveRepertoire(publicUrl);
+      }).catch(function (err) {
+        showMsg('repertoire', err.message || '海報上傳失敗', true);
+      });
+    } else {
+      saveRepertoire(posterUrlInput.value.trim());
+    }
   });
 
   // ---------- 影音 ----------
@@ -324,11 +355,14 @@
     e.preventDefault();
     var form = e.target;
     var editId = form.getAttribute('data-edit-id');
+    var videoUrl = document.getElementById('mediaVideoUrl').value.trim();
+    var thumbnailUrl = document.getElementById('mediaThumbnailUrl').value.trim();
+    if (!thumbnailUrl && videoUrl) thumbnailUrl = getVideoThumbnailUrl(videoUrl);
     var payload = {
       title: document.getElementById('mediaTitle').value.trim(),
       description: document.getElementById('mediaDescription').value.trim(),
-      video_url: document.getElementById('mediaVideoUrl').value.trim(),
-      thumbnail_url: document.getElementById('mediaThumbnailUrl').value.trim(),
+      video_url: videoUrl,
+      thumbnail_url: thumbnailUrl,
       sort_order: parseInt(document.getElementById('mediaSortOrder').value, 10) || 0,
       updated_at: new Date().toISOString()
     };

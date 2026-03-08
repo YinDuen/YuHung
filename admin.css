@@ -111,7 +111,12 @@ body.logged-in .admin-main {
 
 .form-group { margin-bottom: 1.25rem; }
 .form-group label { display: block; margin-bottom: 0.35rem; font-size: 0.9rem; color: var(--text-muted); }
-.form-group input,
+.form-group input[type="file"] {
+  width: 100%;
+  padding: 0.5rem 0;
+  font-size: 0.9rem;
+}
+.form-group input:not([type="file"]),
 .form-group textarea {
   width: 100%;
   padding: 0.6rem 0.75rem;

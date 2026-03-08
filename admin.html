@@ -85,6 +85,12 @@
           <input type="text" id="repOrg" placeholder="主辦單位／含光藝術工作室">
         </div>
         <div class="form-group">
+          <label>海報圖片</label>
+          <input type="text" id="repPosterUrl" placeholder="海報網址（或上傳後自動填入）">
+          <input type="file" id="repPosterFile" accept="image/jpeg,image/png,image/webp,image/gif">
+          <span class="hint">可貼網址，或選擇檔案上傳（jpg/png/webp/gif，建議 5MB 內）</span>
+        </div>
+        <div class="form-group">
           <label>排序（數字愈大愈前面）</label>
           <input type="number" id="repSortOrder" value="0">
         </div>
@@ -112,7 +118,7 @@
         </div>
         <div class="form-group">
           <label>縮圖網址（可略）</label>
-          <input type="text" id="mediaThumbnailUrl" placeholder="https://...">
+          <input type="text" id="mediaThumbnailUrl" placeholder="留空則從影片連結自動取得（支援 YouTube）">
         </div>
         <div class="form-group">
           <label>排序</label>

@@ -31,7 +31,9 @@
 
 1. 前往 [Supabase](https://supabase.com) 建立專案。
 2. 在 **SQL Editor** 中執行 `supabase/migrations/001_initial_schema.sql` 的內容，建立資料表與預設資料。
-3. 在 **Authentication > Providers** 啟用 Email，並在 **Authentication > Users** 中新增一位使用者（作為管理員帳密）。
+3. （可選）若要讓曲目區塊一開始就顯示與目前靜態版相同的兩場音樂會，再執行 `supabase/migrations/002_seed_repertoire.sql`。前端會用相同版型與樣式（字體、顏色等）顯示。
+4. （可選）若要讓曲目可上傳海報，執行 `supabase/migrations/003_add_repertoire_poster.sql`（新增 `poster_url` 欄位與 Storage bucket）。
+5. 在 **Authentication > Providers** 啟用 Email，並在 **Authentication > Users** 中新增一位使用者（作為管理員帳密）。
 
 ### 2. 設定 config.js
 
