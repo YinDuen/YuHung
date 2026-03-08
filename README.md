@@ -40,6 +40,30 @@
 - **Project Settings > API**：複製 `Project URL` 與 `anon public` key。
 - 將 `config.js` 內的 `SUPABASE_URL`、`SUPABASE_ANON_KEY` 替換成上述兩項。
 
+### 若部署到自己的網域或 VM（登入出現 CORS / preflight 失敗）
+
+Supabase 託管版在 Dashboard **可能沒有**獨立的 CORS / Allowed Origins 設定，可依序嘗試以下兩種方式。
+
+**方式一：Authentication 的 URL 設定（先試）**
+
+1. 登入 [Supabase Dashboard](https://supabase.com/dashboard) → 你的專案。
+2. 左側選 **Authentication** → **URL Configuration**。
+3. 將 **Site URL** 改成你後台的網址（例如 `http://你的VM的IP` 或 `https://你的網域.com`，不要加路徑）。
+4. 在 **Redirect URLs** 新增同一網址（例如 `http://你的VM的IP/**` 或 `https://你的網域.com/**`）。
+5. 儲存後再試登入。
+
+若仍失敗，改用方式二。
+
+**方式二：用 Nginx 反向代理（避開 CORS，一定可行）**
+
+讓瀏覽器只對「你的網站」發請求，由 Nginx 代為轉發到 Supabase，就不會發生跨來源請求、也不受 CORS 影響。做法如下：
+
+1. 在 VM 上使用專案裡的 **`deploy/nginx-yuhung-with-supabase-proxy.conf`**（內含 Supabase 代理設定），並把其中的 `YOUR_SUPABASE_PROJECT_REF` 改成你的專案 ref（Supabase 網址中間那段，例如 `cgrlvepdnboidphhzhiw`）。
+2. 部署到 VM 的 **config.js** 改為使用代理路徑（見該設定檔內說明），例如：  
+   `SUPABASE_URL = window.location.origin + '/supabase-proxy'`  
+   或本機開發時仍用直接連線的 Supabase 網址。
+3. 重載 Nginx 後，再從你的網址開 admin 登入。
+
 ### 3. 使用後台
 
 - **請用本機伺服器開啟**（不要直接雙擊 `admin.html` 用 `file://` 開啟，否則會出現「Failed to fetch」無法登入）：

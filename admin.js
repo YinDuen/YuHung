@@ -30,8 +30,14 @@
   }
 
   function formatLoginError(msg) {
-    if (!msg || msg.toLowerCase().indexOf('fetch') !== -1) {
+    var isFileProtocol = window.location.protocol === 'file:';
+    var isFetchError = !msg || (msg.toLowerCase().indexOf('fetch') !== -1) || (msg.toLowerCase().indexOf('network') !== -1);
+
+    if (isFileProtocol && isFetchError) {
       return '無法連線至 Supabase。請勿直接開啟檔案（file://），改用以「本機伺服器」開啟頁面。例如在專案資料夾執行：npx serve . 然後用 http://localhost:3000/admin.html 登入。';
+    }
+    if (isFetchError) {
+      return '連線至 Supabase 失敗（' + (msg || '網路錯誤') + '）。請檢查：1) config.js 的 SUPABASE_URL、SUPABASE_ANON_KEY 是否正確 2) 伺服器能否連外（可 ping supabase.co）3) Supabase 專案是否已暫停。';
     }
     return msg;
   }
