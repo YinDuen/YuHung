@@ -41,10 +41,46 @@
 ```bash
 # 在 VM 上建立目錄
 sudo mkdir -p /var/www/yuhung
-# 用 scp、git clone 或上傳方式，把專案裡的這些檔案放進去：
-# index.html, admin.html, styles.css, admin.css, script.js, admin.js, data-loader.js, config.js
-# 以及 images（若有）、supabase 等
+# 用 scp、git clone 或上傳方式，把專案裡的這些檔案放進去
 ```
+
+**若本機（或 file://）已看到改動，但 Nginx 上看不到（例如後台沒有曲目海報欄位、首頁沒有海報）**：代表 Nginx 提供的檔案不是最新版。常見原因是 **Nginx 的 root 目錄 ≠ 你執行 git pull 的目錄**。
+
+**檢查方式（在 VM 上）：**
+
+```bash
+# 1. 看 Nginx 實際用哪個目錄（在設定檔裡）
+grep -r "root " /etc/nginx/sites-enabled/
+# 例如顯示 root /var/www/yuhung;
+
+# 2. 看你在哪個目錄做 git pull
+pwd
+ls -la index.html admin.html data-loader.js
+# 若 git pull 是在 /home/xxx/YuHung，而 Nginx root 是 /var/www/yuhung，兩邊不同就會看到舊版
+```
+
+**做法一：讓 Nginx 直接指到 git 目錄（建議）**
+
+若你的 repo 在 VM 上是例如 `/home/你的帳號/YuHung`，把 Nginx 的 `root` 改成這個路徑，之後在該目錄做 `git pull` 就會立刻生效。
+
+```bash
+sudo nano /etc/nginx/sites-available/yuhung
+# 把 root /var/www/yuhung; 改成 root /home/你的帳號/YuHung;
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+**做法二：git pull 後複製到 Nginx 目錄**
+
+若你希望 Nginx 仍用 `/var/www/yuhung`，就在 **同一個 VM** 上、在 **clone 專案的那個目錄** 做 `git pull`，再複製到 Nginx root：
+
+```bash
+cd /path/to/your/YuHung   # 你 clone 的目錄
+git pull
+sudo cp -r index.html admin.html styles.css admin.css script.js admin.js data-loader.js config.js supabase-client.js /var/www/yuhung/
+# 或整份覆蓋（注意不要蓋掉你在 VM 上改過的 config.js，若有的話先備份）
+```
+
+完整要覆蓋的檔案見 **`deploy/files-to-upload.txt`**。更新後在瀏覽器用 **Ctrl+Shift+R** 強制重新整理。
 
 ### 2. 使用專案裡的 Nginx 設定
 

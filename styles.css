@@ -510,6 +510,13 @@ img {
   color: var(--accent);
 }
 
+.contact-social-no-link {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  cursor: default;
+  text-decoration: none;
+}
+
 /* --- Footer --- */
 .footer {
   padding: 2rem 0;

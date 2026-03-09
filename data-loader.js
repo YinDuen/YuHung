@@ -92,12 +92,23 @@
       emailLink.href = 'mailto:' + (row.email || '').trim();
     }
     var social = row.social_links || {};
-    var yt = container.querySelector('a[aria-label="YouTube"]');
-    if (yt && social.youtube) yt.href = social.youtube;
-    var fb = container.querySelector('a[aria-label="Facebook"]');
-    if (fb && social.facebook) fb.href = social.facebook;
-    var ig = container.querySelector('a[aria-label="Instagram"]');
-    if (ig && social.instagram) ig.href = social.instagram;
+    function setSocialLink(selector, value, label) {
+      var el = container.querySelector(selector);
+      if (!el) return;
+      var v = (value || '').trim();
+      if (v === '' || v === '*') {
+        var span = document.createElement('span');
+        span.setAttribute('aria-label', label);
+        span.className = 'contact-social-no-link';
+        span.textContent = label;
+        el.parentNode.replaceChild(span, el);
+      } else {
+        el.href = v;
+      }
+    }
+    setSocialLink('a[aria-label="YouTube"]', social.youtube, 'YouTube');
+    setSocialLink('a[aria-label="Facebook"]', social.facebook, 'Facebook');
+    setSocialLink('a[aria-label="Instagram"]', social.instagram, 'Instagram');
   }
 
   function escapeHtml(s) {

@@ -1,0 +1,23 @@
+# 部署到 Nginx 時請確保以下檔案為「最新版」
+# 若本機 file:// 有看到改動、但 Nginx 上看不到，代表 VM 上的檔案是舊的，請重新上傳這些檔：
+
+# 首頁與前端
+index.html
+styles.css
+script.js
+config.js
+supabase-client.js
+data-loader.js
+
+# 後台（曲目海報、影音縮圖等）
+admin.html
+admin.js
+admin.css
+
+# 可選：測試頁
+test-supabase.html
+
+# 注意：
+# 1. config.js 在 VM 上請改為 SUPABASE_URL = window.location.origin + '/supabase-proxy'（若用代理）
+# 2. 若使用 Supabase 海報上傳，需已執行 supabase/migrations/003_add_repertoire_poster.sql
+# 3. 上傳後可強制重新整理瀏覽器（Ctrl+Shift+R 或 Cmd+Shift+R）避免快取
