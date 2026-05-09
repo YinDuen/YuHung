@@ -1,20 +1,27 @@
-name: Keep Supabase Alive
+name: Keepalive (Supabase + Repo)
 
-# 目的：定期呼叫 Supabase REST API，避免免費版專案因 7 天無活動而被暫停。
-# 機制：直接從 config.js 讀取 SUPABASE_URL 與 SUPABASE_ANON_KEY（anon key 本來就是公開的），
-#       對 about / repertoire / media / contact 各送一筆 select 請求。
+# 目的（雙重）：
+# 1) Supabase keepalive：定期呼叫 REST API，避免免費版專案因 7 天無活動被暫停。
+# 2) Repo keepalive：產生一筆 heartbeat commit，避免 GitHub 因 repo 60 天無活動
+#    而自動停用所有排程 workflow（包括這個 workflow 自己）。
+#
+# 機制：
+# - 從 config.js 讀取 SUPABASE_URL 與 SUPABASE_ANON_KEY（anon key 本來就公開）。
+# - 對 about / repertoire / media / contact 各送一筆 select 請求。
+# - 把當前 UTC 時間寫入 .github/last-active.txt 並用 github-actions bot 提交。
 
 on:
   schedule:
     # 每 3 天 UTC 03:17（台北時間 11:17）執行一次。
-    # 月底最大間隔約 4 天，遠低於 Supabase 7 天暫停門檻。
+    # 月底最大間隔約 4 天，遠低於 Supabase 7 天暫停門檻；
+    # 對 repo 60 天規則也綽綽有餘。
     - cron: '17 3 */3 * *'
   # 允許在 GitHub Actions 頁面手動觸發（測試或剛從暫停恢復時用）
   workflow_dispatch:
 
-# 只取最少必要權限
+# heartbeat step 需要 push 提交，所以 contents 需 write
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   ping:
@@ -63,3 +70,24 @@ jobs:
             exit 1
           fi
           echo "✓ Supabase keepalive 完成"
+
+      # 把當前 UTC 時間寫入一個 heartbeat 檔並 commit/push 回去。
+      # 這筆提交算 repo 活動 → 避免 60 天閒置導致排程 workflow 被自動停用。
+      # Supabase ping 失敗時就不會跑到這步，避免在 Supabase 異常時還反覆刷提交。
+      - name: Heartbeat commit (keep repo active)
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .github
+          NOW=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          echo "$NOW" > .github/last-active.txt
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet -- .github/last-active.txt; then
+            echo "heartbeat 無變更（不太可能），略過 commit"
+            exit 0
+          fi
+          git add .github/last-active.txt
+          git commit -m "chore: keepalive heartbeat ${NOW}"
+          # 用內建 GITHUB_TOKEN（已在 contents:write 權限下）push 回 default branch
+          git push
