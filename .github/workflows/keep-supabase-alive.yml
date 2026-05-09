@@ -88,9 +88,24 @@ jobs:
           # 用 git diff（unstaged）會把 untracked 檔當成「無變更」，那是錯的。
           git add .github/last-active.txt
           if git diff --cached --quiet -- .github/last-active.txt; then
-            echo "heartbeat 內容與 HEAD 相同，略過 commit"
-            exit 0
+            # timestamp 每次都不同，理論上不可能無 diff。走到這裡代表 workflow 有 bug，
+            # 直接 fail 而不是靜默 exit 0，避免「workflow 綠勾但實際沒提交」這種隱性失敗。
+            {
+              echo "## ❌ Heartbeat 失敗"
+              echo ""
+              echo "預期 \`.github/last-active.txt\` 會有變更（timestamp 應每次不同），但 \`git diff --cached\` 顯示無 diff。"
+              echo "這通常代表 workflow 邏輯出問題，請檢查 Heartbeat 步驟。"
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "::error::heartbeat 內容與 HEAD 相同 — 不該發生，請檢查 workflow 邏輯"
+            exit 1
           fi
           git commit -m "chore: keepalive heartbeat ${NOW}"
+          SHA=$(git rev-parse --short HEAD)
           # 用內建 GITHUB_TOKEN（已在 contents:write 權限下）push 回 default branch
           git push
+          {
+            echo "## ✅ Heartbeat 成功"
+            echo ""
+            echo "- Commit: \`${SHA}\`"
+            echo "- Timestamp: \`${NOW}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
