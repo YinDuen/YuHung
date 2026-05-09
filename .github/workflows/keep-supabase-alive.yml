@@ -23,6 +23,11 @@ on:
 permissions:
   contents: write
 
+# 提前讓 JavaScript actions 跑在 Node 24 上，消除 Node 20 deprecation warning。
+# 2026/6/2 後 Node 24 會成為預設，屆時可移除這個 env。
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 jobs:
   ping:
     runs-on: ubuntu-latest
