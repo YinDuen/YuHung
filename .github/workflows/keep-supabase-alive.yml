@@ -84,11 +84,13 @@ jobs:
           echo "$NOW" > .github/last-active.txt
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          if git diff --quiet -- .github/last-active.txt; then
-            echo "heartbeat 無變更（不太可能），略過 commit"
+          # 先 stage 再用 --cached 比對 index vs HEAD：對新建（untracked）檔也有效。
+          # 用 git diff（unstaged）會把 untracked 檔當成「無變更」，那是錯的。
+          git add .github/last-active.txt
+          if git diff --cached --quiet -- .github/last-active.txt; then
+            echo "heartbeat 內容與 HEAD 相同，略過 commit"
             exit 0
           fi
-          git add .github/last-active.txt
           git commit -m "chore: keepalive heartbeat ${NOW}"
           # 用內建 GITHUB_TOKEN（已在 contents:write 權限下）push 回 default branch
           git push
