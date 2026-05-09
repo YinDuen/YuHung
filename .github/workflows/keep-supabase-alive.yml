@@ -1,0 +1,65 @@
+name: Keep Supabase Alive
+
+# 目的：定期呼叫 Supabase REST API，避免免費版專案因 7 天無活動而被暫停。
+# 機制：直接從 config.js 讀取 SUPABASE_URL 與 SUPABASE_ANON_KEY（anon key 本來就是公開的），
+#       對 about / repertoire / media / contact 各送一筆 select 請求。
+
+on:
+  schedule:
+    # 每 3 天 UTC 03:17（台北時間 11:17）執行一次。
+    # 月底最大間隔約 4 天，遠低於 Supabase 7 天暫停門檻。
+    - cron: '17 3 */3 * *'
+  # 允許在 GitHub Actions 頁面手動觸發（測試或剛從暫停恢復時用）
+  workflow_dispatch:
+
+# 只取最少必要權限
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Parse Supabase config from config.js
+        id: cfg
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL=$(grep -oP "SUPABASE_URL\s*=\s*'\K[^']+" config.js || true)
+          KEY=$(grep -oP "SUPABASE_ANON_KEY\s*=\s*'\K[^']+" config.js || true)
+          if [ -z "$URL" ] || [ -z "$KEY" ]; then
+            echo "::error::Failed to parse SUPABASE_URL or SUPABASE_ANON_KEY from config.js"
+            exit 1
+          fi
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+          # anon key 雖然公開，仍從 log 中遮蔽以免誤觸警示
+          echo "::add-mask::$KEY"
+          echo "key=$KEY" >> "$GITHUB_OUTPUT"
+
+      - name: Ping Supabase tables
+        env:
+          SUPABASE_URL: ${{ steps.cfg.outputs.url }}
+          SUPABASE_ANON_KEY: ${{ steps.cfg.outputs.key }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          fail=0
+          for table in about repertoire media contact; do
+            code=$(curl -sS -o /dev/null -w "%{http_code}" \
+              "${SUPABASE_URL}/rest/v1/${table}?select=id&limit=1" \
+              -H "apikey: ${SUPABASE_ANON_KEY}" \
+              -H "Authorization: Bearer ${SUPABASE_ANON_KEY}")
+            echo "  ${table}: HTTP ${code}"
+            if [ "$code" != "200" ]; then
+              fail=1
+            fi
+          done
+          if [ "$fail" -ne 0 ]; then
+            echo "::error::至少一個資料表查詢失敗，請確認 Supabase 是否健康"
+            exit 1
+          fi
+          echo "✓ Supabase keepalive 完成"
