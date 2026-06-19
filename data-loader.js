@@ -26,10 +26,16 @@
     var paragraphs = Array.isArray(row.paragraphs) ? row.paragraphs : [];
     var existingParas = textBlock.querySelectorAll('.about-text p:not(.lead)');
     existingParas.forEach(function (p) { p.remove(); });
+    var anchor = leadEl;
     paragraphs.forEach(function (para) {
       var p = document.createElement('p');
       p.textContent = para;
-      leadEl ? leadEl.after(p) : textBlock.appendChild(p);
+      if (anchor) {
+        anchor.after(p);
+      } else {
+        textBlock.appendChild(p);
+      }
+      anchor = p;
     });
     var img = document.querySelector('#about .about-image-placeholder img');
     if (img && row.image_url) img.src = row.image_url;
