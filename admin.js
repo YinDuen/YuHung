@@ -59,7 +59,7 @@
     var link = document.querySelector('.admin-nav a[data-panel="' + panelId + '"]');
     if (panel) panel.classList.add('active');
     if (link) link.classList.add('active');
-    if (panelId === 'repertoire') loadRepertoire();
+    if (panelId === 'repertoire') { loadRepertoire(); loadSettings(); }
     if (panelId === 'media') loadMedia();
   }
 
@@ -213,6 +213,37 @@
       showMsg('about', '已儲存');
     }).catch(function (err) {
       showMsg('about', err.message || '儲存失敗', true);
+    });
+  });
+
+  // ---------- 輪播設定 ----------
+  function loadSettings() {
+    withTimeout(supabase.from('settings').select('*').limit(1).maybeSingle(), 15000).then(function (r) {
+      if (r.data) {
+        document.getElementById('repInterval').value = r.data.repertoire_interval || 10;
+      }
+    }).catch(function () {});
+  }
+
+  document.getElementById('repertoireSettingsForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var interval = parseInt(document.getElementById('repInterval').value, 10);
+    if (isNaN(interval) || interval < 1) {
+      showMsg('repertoire', '請輸入 1 以上的秒數', true);
+      return;
+    }
+    supabase.from('settings').select('id').limit(1).maybeSingle().then(function (res) {
+      var payload = { repertoire_interval: interval, updated_at: new Date().toISOString() };
+      if (res.data) {
+        return supabase.from('settings').update(payload).eq('id', res.data.id);
+      } else {
+        return supabase.from('settings').insert(payload);
+      }
+    }).then(function (r) {
+      if (r.error) throw r.error;
+      showMsg('repertoire', '已儲存輪播設定');
+    }).catch(function (err) {
+      showMsg('repertoire', err.message || '儲存失敗', true);
     });
   });
 

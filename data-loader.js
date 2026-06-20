@@ -43,6 +43,9 @@
     if (heroImg && row.hero_image_url) heroImg.src = row.hero_image_url;
   }
 
+  // 曲目輪播換頁秒數（由後台設定），預設 10 秒
+  var repertoireIntervalSec = 10;
+
   function renderRepertoire(data) {
     var container = document.querySelector('#repertoire .concert-list');
     if (!container || !data || data.length === 0) return;
@@ -66,6 +69,10 @@
         (posterHtml ? posterHtml : '') +
         '</div></article>';
     }).join('');
+    // 重新渲染後啟用左右自動換頁輪播（套用後台設定的秒數）
+    if (typeof window.initRepertoireCarousel === 'function') {
+      window.initRepertoireCarousel(repertoireIntervalSec);
+    }
   }
 
   function renderMedia(data) {
@@ -127,8 +134,14 @@
     supabase.from('about').select('*'),
     supabase.from('repertoire').select('*'),
     supabase.from('media').select('*'),
-    supabase.from('contact').select('*')
+    supabase.from('contact').select('*'),
+    supabase.from('settings').select('*')
   ]).then(function (results) {
+    // 先套用設定，渲染曲目時即可使用正確的輪播秒數
+    if (results[4] && results[4].data && results[4].data.length > 0) {
+      var sec = parseFloat(results[4].data[0].repertoire_interval);
+      if (!isNaN(sec) && sec > 0) repertoireIntervalSec = sec;
+    }
     if (results[0].data) renderAbout(results[0].data);
     if (results[1].data) renderRepertoire(results[1].data);
     if (results[2].data) renderMedia(results[2].data);

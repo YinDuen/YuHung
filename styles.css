@@ -319,6 +319,52 @@ img {
   gap: 2.5rem;
 }
 
+/* --- 曲目與演出輪播 --- */
+.concert-carousel {
+  overflow: hidden;
+  width: 100%;
+}
+
+.concert-list.is-carousel {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0;
+  transition: transform 0.6s ease;
+}
+
+.concert-list.is-carousel .concert-card {
+  flex: 0 0 100%;
+  width: 100%;
+  min-width: 100%;
+}
+
+.concert-dots {
+  display: flex;
+  justify-content: center;
+  gap: 0.65rem;
+  margin-top: 2rem;
+}
+
+.concert-dot {
+  width: 10px;
+  height: 10px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--accent-dim);
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.3s ease;
+}
+
+.concert-dot:hover {
+  background: var(--accent);
+}
+
+.concert-dot.active {
+  background: var(--accent);
+  transform: scale(1.35);
+}
+
 .concert-card {
   padding: 2rem;
   border: 1px solid var(--border);
