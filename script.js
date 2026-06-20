@@ -125,50 +125,71 @@
     resetTimer();
   }
 
-  // 手動左右滑動（觸控與滑鼠拖曳）；事件只綁定一次，透過 list._carouselState 取得最新狀態
+  // 手動左右滑動：iOS Safari 對 Pointer Events 支援不穩（會提前觸發 pointercancel），
+  // 因此觸控走原生 touch 事件、桌機走 mouse 事件。事件只綁定一次，狀態存在 list._carouselState。
   function bindDrag(list) {
     if (list._dragBound) return;
     list._dragBound = true;
 
-    var dragging = false;
+    var dragging = false;   // 已進入拖曳流程（含尚未判定方向）
+    var horizontal = false; // 已判定為水平手勢
+    var decided = false;    // 是否已判定手勢方向
     var startX = 0;
+    var startY = 0;
     var moved = 0;
     var pageW = 1;
 
-    list.addEventListener('pointerdown', function (e) {
+    function start(x, y) {
       var st = list._carouselState;
-      if (!st || st.cards <= 1) return;
+      if (!st || st.cards <= 1) return false;
       dragging = true;
-      startX = e.clientX;
+      decided = false;
+      horizontal = false;
+      startX = x;
+      startY = y;
       moved = 0;
       pageW = list.clientWidth || 1;
-      list.style.transition = 'none';
-      list.classList.add('is-dragging');
-      if (list.setPointerCapture) {
-        try { list.setPointerCapture(e.pointerId); } catch (err) {}
-      }
       // 拖曳期間暫停自動換頁
       if (list._carouselTimer) {
         clearInterval(list._carouselTimer);
         list._carouselTimer = null;
       }
-    });
+      return true;
+    }
 
-    list.addEventListener('pointermove', function (e) {
-      if (!dragging) return;
+    // 回傳 true 表示為水平拖曳（呼叫端需 preventDefault 以阻止頁面捲動）
+    function move(x, y) {
+      if (!dragging) return false;
+      var dx = x - startX;
+      var dy = y - startY;
+      if (!decided) {
+        // 位移太小先不判定，避免誤判
+        if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return false;
+        decided = true;
+        horizontal = Math.abs(dx) > Math.abs(dy);
+        if (horizontal) {
+          list.style.transition = 'none';
+          list.classList.add('is-dragging');
+        } else {
+          // 垂直手勢：放棄拖曳，讓頁面正常上下捲動
+          dragging = false;
+          return false;
+        }
+      }
+      if (!horizontal) return false;
+      moved = dx;
       var st = list._carouselState;
-      moved = e.clientX - startX;
       list.style.transform = 'translateX(' + (-st.current * pageW + moved) + 'px)';
-    });
+      return true;
+    }
 
-    function endDrag() {
+    function end() {
       if (!dragging) return;
       dragging = false;
       list.classList.remove('is-dragging');
       list.style.transition = '';
       var st = list._carouselState;
-      // 滑動超過頁寬 15% 才換頁，否則回彈
-      if (Math.abs(moved) > pageW * 0.15) {
+      if (horizontal && Math.abs(moved) > pageW * 0.15) {
         st.goTo(st.current + (moved < 0 ? 1 : -1));
       } else {
         st.goTo(st.current);
@@ -177,8 +198,37 @@
       moved = 0;
     }
 
-    list.addEventListener('pointerup', endDrag);
-    list.addEventListener('pointercancel', endDrag);
+    // --- 觸控（手機、平板，含 iOS）---
+    list.addEventListener('touchstart', function (e) {
+      if (e.touches.length !== 1) return;
+      start(e.touches[0].clientX, e.touches[0].clientY);
+    }, { passive: true });
+
+    list.addEventListener('touchmove', function (e) {
+      if (!dragging) return;
+      var t = e.touches[0];
+      var isHorizontal = move(t.clientX, t.clientY);
+      // 水平拖曳時阻止頁面橫向捲動（需 passive:false）
+      if (isHorizontal && e.cancelable) e.preventDefault();
+    }, { passive: false });
+
+    list.addEventListener('touchend', end);
+    list.addEventListener('touchcancel', end);
+
+    // --- 滑鼠（桌機）---
+    var mouseDown = false;
+    list.addEventListener('mousedown', function (e) {
+      mouseDown = start(e.clientX, e.clientY);
+      if (mouseDown) e.preventDefault();
+    });
+    window.addEventListener('mousemove', function (e) {
+      if (mouseDown) move(e.clientX, e.clientY);
+    });
+    window.addEventListener('mouseup', function () {
+      if (!mouseDown) return;
+      mouseDown = false;
+      end();
+    });
   }
 
   // 供 data-loader 在動態渲染後重新初始化
