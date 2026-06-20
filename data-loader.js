@@ -103,11 +103,8 @@
       if (!el) return;
       var v = (value || '').trim();
       if (v === '' || v === '*') {
-        var span = document.createElement('span');
-        span.setAttribute('aria-label', label);
-        span.className = 'contact-social-no-link';
-        span.textContent = label;
-        el.parentNode.replaceChild(span, el);
+        // 未提供連結時直接隱藏，不顯示該項目
+        el.parentNode.removeChild(el);
       } else {
         el.href = v;
       }
