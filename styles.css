@@ -330,12 +330,26 @@ img {
   flex-wrap: nowrap;
   gap: 0;
   transition: transform 0.6s ease;
+  touch-action: pan-y;        /* 允許垂直捲動，水平交給輪播處理 */
+  cursor: grab;
+  user-select: none;
+}
+
+.concert-list.is-carousel.is-dragging {
+  transition: none;           /* 拖曳時即時跟手，不套用動畫 */
+  cursor: grabbing;
 }
 
 .concert-list.is-carousel .concert-card {
   flex: 0 0 100%;
   width: 100%;
   min-width: 100%;
+}
+
+.concert-list.is-carousel img {
+  -webkit-user-drag: none;
+  user-select: none;
+  pointer-events: none;       /* 避免拖曳圖片時觸發原生拖放 */
 }
 
 .concert-dots {

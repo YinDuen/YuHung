@@ -95,26 +95,90 @@
     });
     viewport.parentNode.insertBefore(dots, viewport.nextSibling);
 
-    var current = 0;
+    // 狀態存在 list 上，讓單一組拖曳事件永遠讀到最新頁面
+    var state = list._carouselState || (list._carouselState = {});
+    state.cards = cards.length;
+    state.current = 0;
 
     function goTo(i) {
-      current = (i + cards.length) % cards.length;
-      list.style.transform = 'translateX(' + (-current * 100) + '%)';
+      state.current = (i + cards.length) % cards.length;
+      list.style.transform = 'translateX(' + (-state.current * 100) + '%)';
       var dotEls = dots.querySelectorAll('.concert-dot');
       for (var d = 0; d < dotEls.length; d++) {
-        dotEls[d].classList.toggle('active', d === current);
+        dotEls[d].classList.toggle('active', d === state.current);
       }
     }
 
     function resetTimer() {
       if (list._carouselTimer) clearInterval(list._carouselTimer);
       list._carouselTimer = setInterval(function () {
-        goTo(current + 1);
+        goTo(state.current + 1);
       }, autoIntervalMs);
     }
 
+    state.goTo = goTo;
+    state.resetTimer = resetTimer;
+
+    bindDrag(list);
+
     goTo(0);
     resetTimer();
+  }
+
+  // 手動左右滑動（觸控與滑鼠拖曳）；事件只綁定一次，透過 list._carouselState 取得最新狀態
+  function bindDrag(list) {
+    if (list._dragBound) return;
+    list._dragBound = true;
+
+    var dragging = false;
+    var startX = 0;
+    var moved = 0;
+    var pageW = 1;
+
+    list.addEventListener('pointerdown', function (e) {
+      var st = list._carouselState;
+      if (!st || st.cards <= 1) return;
+      dragging = true;
+      startX = e.clientX;
+      moved = 0;
+      pageW = list.clientWidth || 1;
+      list.style.transition = 'none';
+      list.classList.add('is-dragging');
+      if (list.setPointerCapture) {
+        try { list.setPointerCapture(e.pointerId); } catch (err) {}
+      }
+      // 拖曳期間暫停自動換頁
+      if (list._carouselTimer) {
+        clearInterval(list._carouselTimer);
+        list._carouselTimer = null;
+      }
+    });
+
+    list.addEventListener('pointermove', function (e) {
+      if (!dragging) return;
+      var st = list._carouselState;
+      moved = e.clientX - startX;
+      list.style.transform = 'translateX(' + (-st.current * pageW + moved) + 'px)';
+    });
+
+    function endDrag() {
+      if (!dragging) return;
+      dragging = false;
+      list.classList.remove('is-dragging');
+      list.style.transition = '';
+      var st = list._carouselState;
+      // 滑動超過頁寬 15% 才換頁，否則回彈
+      if (Math.abs(moved) > pageW * 0.15) {
+        st.goTo(st.current + (moved < 0 ? 1 : -1));
+      } else {
+        st.goTo(st.current);
+      }
+      st.resetTimer();
+      moved = 0;
+    }
+
+    list.addEventListener('pointerup', endDrag);
+    list.addEventListener('pointercancel', endDrag);
   }
 
   // 供 data-loader 在動態渲染後重新初始化
