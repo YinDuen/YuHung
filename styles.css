@@ -340,16 +340,15 @@ img {
 
 .concert-poster {
   flex-shrink: 0;
-  width: 260px;
+  width: 312px;
   border-radius: 2px;
   overflow: hidden;
-  border: 1px solid var(--border);
 }
 
 .concert-poster img {
   width: 100%;
   height: auto;
-  max-height: 360px;
+  max-height: 432px;
   object-fit: contain;
   display: block;
 }
