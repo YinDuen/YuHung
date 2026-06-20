@@ -102,7 +102,7 @@
       var el = container.querySelector(selector);
       if (!el) return;
       var v = (value || '').trim();
-      if (v === '' || v === '*') {
+      if (v === '' || v === '*' || v === '#') {
         // 未提供連結時直接隱藏，不顯示該項目
         el.parentNode.removeChild(el);
       } else {
