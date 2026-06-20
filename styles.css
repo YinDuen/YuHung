@@ -323,6 +323,39 @@ img {
 .concert-carousel {
   overflow: hidden;
   width: 100%;
+  position: relative;
+}
+
+/* 箭頭與圓點同列置中於輪播下方 */
+.concert-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  margin-top: 2rem;
+}
+
+.concert-arrow {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--accent);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+.concert-arrow:hover {
+  background: var(--accent);
+  color: var(--bg);
 }
 
 .concert-list.is-carousel {
@@ -355,8 +388,8 @@ img {
 .concert-dots {
   display: flex;
   justify-content: center;
+  align-items: center;
   gap: 0.65rem;
-  margin-top: 2rem;
 }
 
 .concert-dot {

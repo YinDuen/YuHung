@@ -58,8 +58,10 @@
       clearInterval(list._carouselTimer);
       list._carouselTimer = null;
     }
-    var prevDots = document.querySelector('#repertoire .concert-dots');
-    if (prevDots) prevDots.parentNode.removeChild(prevDots);
+    var oldControls = document.querySelectorAll('#repertoire .concert-controls, #repertoire .concert-dots, #repertoire .concert-arrow');
+    for (var a = 0; a < oldControls.length; a++) {
+      oldControls[a].parentNode.removeChild(oldControls[a]);
+    }
 
     // 只有一張卡片時不需要輪播
     if (cards.length <= 1) {
@@ -79,6 +81,20 @@
       viewport.appendChild(list);
     }
 
+    // 建立左右箭頭（任何裝置都能點選換頁）
+    var prevBtn = document.createElement('button');
+    prevBtn.type = 'button';
+    prevBtn.className = 'concert-arrow concert-arrow-prev';
+    prevBtn.setAttribute('aria-label', '上一場');
+    prevBtn.innerHTML = '&#8249;';
+    var nextBtn = document.createElement('button');
+    nextBtn.type = 'button';
+    nextBtn.className = 'concert-arrow concert-arrow-next';
+    nextBtn.setAttribute('aria-label', '下一場');
+    nextBtn.innerHTML = '&#8250;';
+    prevBtn.addEventListener('click', function () { goTo(state.current - 1); resetTimer(); });
+    nextBtn.addEventListener('click', function () { goTo(state.current + 1); resetTimer(); });
+
     // 建立圓點指示
     var dots = document.createElement('div');
     dots.className = 'concert-dots';
@@ -93,7 +109,14 @@
       });
       dots.appendChild(dot);
     });
-    viewport.parentNode.insertBefore(dots, viewport.nextSibling);
+
+    // 箭頭與圓點放在輪播下方同一列，避免蓋住卡片文字
+    var controls = document.createElement('div');
+    controls.className = 'concert-controls';
+    controls.appendChild(prevBtn);
+    controls.appendChild(dots);
+    controls.appendChild(nextBtn);
+    viewport.parentNode.insertBefore(controls, viewport.nextSibling);
 
     // 狀態存在 list 上，讓單一組拖曳事件永遠讀到最新頁面
     var state = list._carouselState || (list._carouselState = {});
