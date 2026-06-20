@@ -320,10 +320,24 @@ img {
 }
 
 /* --- 曲目與演出輪播 --- */
+/* 以瀏覽器原生水平捲動 + scroll-snap 實作，觸控滑動由系統處理（iOS/iPadOS 最穩） */
 .concert-carousel {
-  overflow: hidden;
   width: 100%;
   position: relative;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;        /* Firefox：隱藏捲軸 */
+  cursor: grab;
+}
+
+.concert-carousel::-webkit-scrollbar {
+  display: none;                /* Chrome / Safari：隱藏捲軸 */
+}
+
+.concert-carousel.is-grabbing {
+  cursor: grabbing;
 }
 
 /* 箭頭與圓點同列置中於輪播下方 */
@@ -362,27 +376,18 @@ img {
   display: flex;
   flex-wrap: nowrap;
   gap: 0;
-  transition: transform 0.6s ease;
-  touch-action: pan-y;        /* 允許垂直捲動，水平交給輪播處理 */
-  cursor: grab;
-  user-select: none;
-}
-
-.concert-list.is-carousel.is-dragging {
-  transition: none;           /* 拖曳時即時跟手，不套用動畫 */
-  cursor: grabbing;
 }
 
 .concert-list.is-carousel .concert-card {
   flex: 0 0 100%;
   width: 100%;
   min-width: 100%;
+  scroll-snap-align: start;
 }
 
 .concert-list.is-carousel img {
-  -webkit-user-drag: none;
+  -webkit-user-drag: none;    /* 避免桌機滑鼠拖曳時產生圖片鬼影 */
   user-select: none;
-  pointer-events: none;       /* 避免拖曳圖片時觸發原生拖放 */
 }
 
 .concert-dots {

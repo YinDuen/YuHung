@@ -118,18 +118,27 @@
     controls.appendChild(nextBtn);
     viewport.parentNode.insertBefore(controls, viewport.nextSibling);
 
-    // 狀態存在 list 上，讓單一組拖曳事件永遠讀到最新頁面
+    // 狀態存在 list 上，讓單一組捲動事件永遠讀到最新狀態
     var state = list._carouselState || (list._carouselState = {});
     state.cards = cards.length;
     state.current = 0;
 
-    function goTo(i) {
-      state.current = (i + cards.length) % cards.length;
-      list.style.transform = 'translateX(' + (-state.current * 100) + '%)';
+    function syncDots(idx) {
       var dotEls = dots.querySelectorAll('.concert-dot');
       for (var d = 0; d < dotEls.length; d++) {
-        dotEls[d].classList.toggle('active', d === state.current);
+        dotEls[d].classList.toggle('active', d === idx);
       }
+    }
+
+    // 以原生捲動換頁（iOS/iPadOS 對原生滑動支援最佳）
+    function goTo(i, instant) {
+      var idx = (i + cards.length) % cards.length;
+      state.current = idx;
+      viewport.scrollTo({
+        left: idx * viewport.clientWidth,
+        behavior: instant ? 'auto' : 'smooth'
+      });
+      syncDots(idx);
     }
 
     function resetTimer() {
@@ -141,116 +150,67 @@
 
     state.goTo = goTo;
     state.resetTimer = resetTimer;
+    state.syncDots = syncDots;
 
-    bindDrag(list);
+    bindScroll(viewport, list);
 
-    goTo(0);
+    goTo(0, true);
     resetTimer();
   }
 
-  // 手動左右滑動：iOS Safari 對 Pointer Events 支援不穩（會提前觸發 pointercancel），
-  // 因此觸控走原生 touch 事件、桌機走 mouse 事件。事件只綁定一次，狀態存在 list._carouselState。
-  function bindDrag(list) {
-    if (list._dragBound) return;
-    list._dragBound = true;
+  // 手動滑動：直接使用瀏覽器原生捲動（觸控滑動由系統處理，iOS/iPadOS 最穩）。
+  // 監聽 scroll 同步圓點；桌機額外提供滑鼠拖曳捲動。事件只綁一次，狀態存在 list._carouselState。
+  function bindScroll(viewport, list) {
+    if (viewport._scrollBound) return;
+    viewport._scrollBound = true;
 
-    var dragging = false;   // 已進入拖曳流程（含尚未判定方向）
-    var horizontal = false; // 已判定為水平手勢
-    var decided = false;    // 是否已判定手勢方向
-    var startX = 0;
-    var startY = 0;
-    var moved = 0;
-    var pageW = 1;
-
-    function start(x, y) {
+    // 使用者滑動後同步目前頁面與圓點
+    var scrollTimer = null;
+    viewport.addEventListener('scroll', function () {
       var st = list._carouselState;
-      if (!st || st.cards <= 1) return false;
-      dragging = true;
-      decided = false;
-      horizontal = false;
-      startX = x;
-      startY = y;
-      moved = 0;
-      pageW = list.clientWidth || 1;
-      // 拖曳期間暫停自動換頁
-      if (list._carouselTimer) {
-        clearInterval(list._carouselTimer);
-        list._carouselTimer = null;
-      }
-      return true;
-    }
-
-    // 回傳 true 表示為水平拖曳（呼叫端需 preventDefault 以阻止頁面捲動）
-    function move(x, y) {
-      if (!dragging) return false;
-      var dx = x - startX;
-      var dy = y - startY;
-      if (!decided) {
-        // 位移太小先不判定，避免誤判
-        if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return false;
-        decided = true;
-        horizontal = Math.abs(dx) > Math.abs(dy);
-        if (horizontal) {
-          list.style.transition = 'none';
-          list.classList.add('is-dragging');
-        } else {
-          // 垂直手勢：放棄拖曳，讓頁面正常上下捲動
-          dragging = false;
-          return false;
+      if (!st || !st.cards) return;
+      if (scrollTimer) clearTimeout(scrollTimer);
+      scrollTimer = setTimeout(function () {
+        var w = viewport.clientWidth || 1;
+        var idx = Math.round(viewport.scrollLeft / w);
+        if (idx < 0) idx = 0;
+        if (idx > st.cards - 1) idx = st.cards - 1;
+        if (idx !== st.current) {
+          st.current = idx;
+          if (st.syncDots) st.syncDots(idx);
         }
-      }
-      if (!horizontal) return false;
-      moved = dx;
-      var st = list._carouselState;
-      list.style.transform = 'translateX(' + (-st.current * pageW + moved) + 'px)';
-      return true;
-    }
-
-    function end() {
-      if (!dragging) return;
-      dragging = false;
-      list.classList.remove('is-dragging');
-      list.style.transition = '';
-      var st = list._carouselState;
-      if (horizontal && Math.abs(moved) > pageW * 0.15) {
-        st.goTo(st.current + (moved < 0 ? 1 : -1));
-      } else {
-        st.goTo(st.current);
-      }
-      st.resetTimer();
-      moved = 0;
-    }
-
-    // --- 觸控（手機、平板，含 iOS）---
-    list.addEventListener('touchstart', function (e) {
-      if (e.touches.length !== 1) return;
-      start(e.touches[0].clientX, e.touches[0].clientY);
+      }, 90);
     }, { passive: true });
 
-    list.addEventListener('touchmove', function (e) {
-      if (!dragging) return;
-      var t = e.touches[0];
-      var isHorizontal = move(t.clientX, t.clientY);
-      // 水平拖曳時阻止頁面橫向捲動（需 passive:false）
-      if (isHorizontal && e.cancelable) e.preventDefault();
-    }, { passive: false });
-
-    list.addEventListener('touchend', end);
-    list.addEventListener('touchcancel', end);
-
-    // --- 滑鼠（桌機）---
-    var mouseDown = false;
-    list.addEventListener('mousedown', function (e) {
-      mouseDown = start(e.clientX, e.clientY);
-      if (mouseDown) e.preventDefault();
+    // 桌機：滑鼠按住拖曳捲動（觸控裝置走原生，不需此段）
+    var down = false, startX = 0, startLeft = 0, dragged = false;
+    viewport.addEventListener('mousedown', function (e) {
+      var st = list._carouselState;
+      if (!st || st.cards <= 1) return;
+      down = true;
+      dragged = false;
+      startX = e.clientX;
+      startLeft = viewport.scrollLeft;
+      viewport.classList.add('is-grabbing');
+      e.preventDefault();
+      if (list._carouselTimer) { clearInterval(list._carouselTimer); list._carouselTimer = null; }
     });
     window.addEventListener('mousemove', function (e) {
-      if (mouseDown) move(e.clientX, e.clientY);
+      if (!down) return;
+      var dx = e.clientX - startX;
+      if (Math.abs(dx) > 3) dragged = true;
+      viewport.scrollLeft = startLeft - dx;
     });
     window.addEventListener('mouseup', function () {
-      if (!mouseDown) return;
-      mouseDown = false;
-      end();
+      if (!down) return;
+      down = false;
+      viewport.classList.remove('is-grabbing');
+      var st = list._carouselState;
+      if (st && st.goTo) {
+        var w = viewport.clientWidth || 1;
+        st.goTo(Math.round(viewport.scrollLeft / w));
+        st.resetTimer();
+      }
     });
   }
 
