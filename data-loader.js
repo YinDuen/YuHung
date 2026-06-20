@@ -39,6 +39,8 @@
     });
     var img = document.querySelector('#about .about-image-placeholder img');
     if (img && row.image_url) img.src = row.image_url;
+    var heroImg = document.querySelector('.hero-photo img');
+    if (heroImg && row.hero_image_url) heroImg.src = row.hero_image_url;
   }
 
   function renderRepertoire(data) {

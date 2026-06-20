@@ -88,6 +88,7 @@
           document.getElementById('aboutLead').value = r.data.lead || '';
           document.getElementById('aboutParagraphs').value = Array.isArray(r.data.paragraphs) ? r.data.paragraphs.join('\n') : '';
           document.getElementById('aboutImageUrl').value = r.data.image_url || '';
+        document.getElementById('aboutHeroImageUrl').value = r.data.hero_image_url || '';
         }
       }).catch(function () {});
       withTimeout(supabase.from('contact').select('*').limit(1).maybeSingle(), 15000).then(function (r) {
@@ -160,8 +161,27 @@
         document.getElementById('aboutLead').value = r.data.lead || '';
         document.getElementById('aboutParagraphs').value = Array.isArray(r.data.paragraphs) ? r.data.paragraphs.join('\n') : '';
         document.getElementById('aboutImageUrl').value = r.data.image_url || '';
+        document.getElementById('aboutHeroImageUrl').value = r.data.hero_image_url || '';
       }
     }).catch(function () {});
+  }
+
+  // 上傳關於／首頁人像照至 Storage，回傳公開 URL
+  function uploadAboutImage(file) {
+    var path = Date.now() + '-' + (file.name || 'image').replace(/[^a-zA-Z0-9._-]/g, '_');
+    return supabase.storage.from('about-images').upload(path, file, { upsert: true }).then(function (r) {
+      if (r.error) throw r.error;
+      return supabase.storage.from('about-images').getPublicUrl(r.data.path).data.publicUrl;
+    });
+  }
+
+  // 取得欄位最終 URL：有選檔案則先上傳，否則用文字輸入的網址
+  function resolveImageField(urlInputId, fileInputId) {
+    var fileInput = document.getElementById(fileInputId);
+    if (fileInput.files && fileInput.files.length > 0) {
+      return uploadAboutImage(fileInput.files[0]);
+    }
+    return Promise.resolve(document.getElementById(urlInputId).value.trim());
   }
 
   document.getElementById('aboutForm').addEventListener('submit', function (e) {
@@ -169,14 +189,25 @@
     var lead = document.getElementById('aboutLead').value.trim();
     var paraText = document.getElementById('aboutParagraphs').value.trim();
     var paragraphs = paraText ? paraText.split('\n').map(function (s) { return s.trim(); }).filter(Boolean) : [];
-    var image_url = document.getElementById('aboutImageUrl').value.trim();
-    supabase.from('about').select('id').limit(1).maybeSingle().then(function (res) {
-      var payload = { lead: lead, paragraphs: paragraphs, image_url: image_url, updated_at: new Date().toISOString() };
-      if (res.data) {
-        return supabase.from('about').update(payload).eq('id', res.data.id);
-      } else {
-        return supabase.from('about').insert(payload);
-      }
+    Promise.all([
+      resolveImageField('aboutHeroImageUrl', 'aboutHeroImageFile'),
+      resolveImageField('aboutImageUrl', 'aboutImageFile')
+    ]).then(function (urls) {
+      var hero_image_url = urls[0];
+      var image_url = urls[1];
+      // 上傳成功後回填網址、清空檔案選擇
+      document.getElementById('aboutHeroImageUrl').value = hero_image_url;
+      document.getElementById('aboutImageUrl').value = image_url;
+      document.getElementById('aboutHeroImageFile').value = '';
+      document.getElementById('aboutImageFile').value = '';
+      return supabase.from('about').select('id').limit(1).maybeSingle().then(function (res) {
+        var payload = { lead: lead, paragraphs: paragraphs, image_url: image_url, hero_image_url: hero_image_url, updated_at: new Date().toISOString() };
+        if (res.data) {
+          return supabase.from('about').update(payload).eq('id', res.data.id);
+        } else {
+          return supabase.from('about').insert(payload);
+        }
+      });
     }).then(function (r) {
       if (r.error) throw r.error;
       showMsg('about', '已儲存');
@@ -437,6 +468,7 @@
           document.getElementById('aboutLead').value = res.data.lead || '';
           document.getElementById('aboutParagraphs').value = Array.isArray(res.data.paragraphs) ? res.data.paragraphs.join('\n') : '';
           document.getElementById('aboutImageUrl').value = res.data.image_url || '';
+          document.getElementById('aboutHeroImageUrl').value = res.data.hero_image_url || '';
         }
       }).catch(function () {});
       withTimeout(supabase.from('contact').select('*').limit(1).maybeSingle(), 15000).then(function (res) {

@@ -55,8 +55,16 @@
           <textarea id="aboutParagraphs" rows="8" placeholder="每行一段落&#10;第二段&#10;第三段"></textarea>
         </div>
         <div class="form-group">
-          <label>關於區圖片網址</label>
-          <input type="text" id="aboutImageUrl" placeholder="photo.jpg 或完整 URL">
+          <label>首頁大頭照</label>
+          <input type="text" id="aboutHeroImageUrl" placeholder="圖片網址（或上傳後自動填入）">
+          <input type="file" id="aboutHeroImageFile" accept="image/jpeg,image/png,image/webp,image/gif">
+          <span class="hint">首頁開頭的人像照。可貼網址，或選擇檔案上傳（jpg/png/webp/gif，建議 5MB 內）</span>
+        </div>
+        <div class="form-group">
+          <label>關於區圖片</label>
+          <input type="text" id="aboutImageUrl" placeholder="圖片網址（或上傳後自動填入）">
+          <input type="file" id="aboutImageFile" accept="image/jpeg,image/png,image/webp,image/gif">
+          <span class="hint">「關於」段落旁的照片。可貼網址，或選擇檔案上傳（jpg/png/webp/gif，建議 5MB 內）</span>
         </div>
         <button type="submit" class="btn btn-primary">儲存關於</button>
       </form>
