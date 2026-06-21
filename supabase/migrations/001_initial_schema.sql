@@ -77,6 +77,6 @@ WHERE NOT EXISTS (SELECT 1 FROM public.about LIMIT 1);
 INSERT INTO public.contact (intro, email, social_links)
 SELECT
   '演出邀約、合作與教學諮詢，歡迎來信。',
-  'contact@yuungliao.com',
+  'contact@yuhungpiano.com',
   '{"youtube":"#","facebook":"#","instagram":"#"}'::jsonb
 WHERE NOT EXISTS (SELECT 1 FROM public.contact LIMIT 1);
